@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>长途旅行中文车间工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            letter-spacing: 0.4px;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        :root {
+            --primary: #0091FF;
+            --primary-light: rgba(0,145,255,0.15);
+            --primary-dark: #0077E6;
+            --primary-gradient: linear-gradient(90deg, #0091FF, #00B8FF, #0091FF);
+            --warning: #FFC107;
+            --danger: #FF4D4D;
+            --dark-1: #121212;
+            --dark-2: #1E1E1E;
+            --dark-3: #2D2D2D;
+            --dark-4: #383838;
+            --text-main: #F5F5F5;
+            --text-secondary: #B0B0B0;
+            --text-tertiary: #787878;
+            --blur: 16px;
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --shadow: 0 8px 32px rgba(0,0,0,0.4);
+        }
+        body {
+            background: var(--dark-1);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 2rem 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+            overflow-x: hidden;
+            position: relative;
+        }
+        /* 动态渐变背景层 */
+        .bg-grad {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--dark-1) 0%, #1a1a2e 50%, var(--dark-1) 100%);
+            background-size: 200% 200%;
+            animation: bgFlow 25s ease infinite;
+            z-index: -3;
+        }
+        @keyframes bgFlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        /* 轻量粒子背景 */
+        .bg-particle {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            pointer-events: none;
+        }
+        /* 亚克力模糊层 */
+        .acrylic {
+            background: rgba(30,30,30,0.7);
+            backdrop-filter: blur(var(--blur));
+            -webkit-backdrop-filter: blur(var(--blur));
+            border: 1px solid rgba(60,60,60,0.5);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow);
+        }
+        /* 核心容器 */
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        /* 头部标题卡片 - 优化语言切换布局 */
+        .header-card {
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1.2rem;
+        }
+        .header-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+        .header-title {
+            font-size: clamp(1.5rem, 3vw, 2.2rem);
+            font-weight: 600;
+            color: var(--text-main);
+        }
+        .header-title i {
+            color: var(--primary);
+            font-size: 1.2em;
+        }
+        /* 语言切换核心样式 - 图标触发+隐藏展开 */
+        .lang-clock-wrap {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+        /* 语言图标按钮（默认显示） */
+        .lang-toggle-btn {
+            padding: 0.5rem;
+            background: var(--dark-2);
+            border: 1px solid var(--dark-4);
+            border-radius: var(--radius-sm);
+            color: var(--primary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+        .lang-toggle-btn:hover {
+            background: var(--primary-light);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,145,255,0.2);
+        }
+        .lang-toggle-btn i {
+            font-size: 1.1rem;
+        }
+        /* 语言切换面板（默认隐藏） */
+        .lang-switch-panel {
+            display: none;
+            position: absolute;
+            top: 80px;
+            right: 2rem;
+            background: var(--dark-2);
+            border: 1px solid var(--dark-4);
+            border-radius: var(--radius-sm);
+            padding: 0.8rem;
+            gap: 0.6rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            box-shadow: var(--shadow);
+            z-index: 999;
+            width: auto;
+            min-width: 280px;
+        }
+        /* 展开状态 */
+        .lang-switch-panel.show {
+            display: flex;
+        }
+        /* 语言按钮样式 */
+        .lang-btn {
+            padding: 0.45rem 0.9rem;
+            background: var(--dark-3);
+            border: 1px solid var(--dark-4);
+            border-radius: var(--radius-sm);
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+        .lang-btn:hover {
+            background: var(--primary-light);
+            color: var(--primary);
+            border-color: var(--primary-light);
+            transform: translateY(-1px);
+        }
+        .lang-btn.active {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+        }
+        /* 时钟样式 */
+        .clock {
+            font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+            color: var(--primary);
+            font-size: clamp(1rem, 2vw, 1.2rem);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--dark-2);
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--dark-4);
+            white-space: nowrap;
+        }
+        /* 下载核心卡片 */
+        .download-card {
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+        .download-title {
+            font-size: clamp(1.2rem, 2.5vw, 1.5rem);
+            color: var(--text-secondary);
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+        .download-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .download-table th {
+            padding: 1rem 1.5rem;
+            text-align: left;
+            background: var(--dark-2);
+            border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+            color: var(--text-main);
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        .download-table td {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--dark-4);
+        }
+        .version-tag {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            background: var(--primary-light);
+            color: var(--primary);
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        /* 下载按钮 - 保留渐变+滑动动效 */
+        .btn {
+            padding: 0.8rem 2rem;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 2px 8px rgba(0,145,255,0.2);
+        }
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            box-shadow: 0 6px 20px rgba(0,145,255,0.4);
+            transform: translateY(-3px);
+        }
+        .btn-primary:active {
+            transform: translateY(1px) translateX(2px);
+            box-shadow: 0 1px 4px rgba(0,145,255,0.3);
+            background: var(--primary-gradient);
+            background-size: 200% 100%;
+            animation: btnGrad 0.3s ease-in-out;
+        }
+        @keyframes btnGrad {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 100% 50%; }
+        }
+        /* 底部社交卡片 */
+        .footer-card {
+            padding: 1.5rem 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .social-links {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .social-link {
+            padding: 0.7rem 1.2rem;
+            background: var(--dark-2);
+            color: var(--text-main);
+            text-decoration: none;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+        }
+        .social-link:hover {
+            background: var(--primary-light);
+            color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,145,255,0.2);
+        }
+        /* GitLab声明样式 */
+        .gitlab-tip {
+            width: 100%;
+            padding: 1rem;
+            background: var(--dark-2);
+            border-left: 4px solid var(--primary);
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            text-align: center;
+            margin: 0.5rem 0;
+        }
+        /* 趣味知识点样式 */
+        .tld-facts {
+            width: 100%;
+            padding: 1rem;
+            background: var(--dark-2);
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--dark-4);
+            margin-top: 0.5rem;
+        }
+        .facts-list {
+            list-style: none;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 0.8rem;
+        }
+        .facts-item {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            line-height: 1.6;
+            padding-left: 1rem;
+            border-left: 2px solid var(--primary-light);
+        }
+        .copyright {
+            color: var(--text-tertiary);
+            font-size: 0.9rem;
+            margin-top: 1rem;
+            text-align: center;
+        }
+        /* 响应式适配 - 优化移动端展开面板位置 */
+        @media (max-width: 768px) {
+            :root {
+                --blur: 10px;
+                --shadow: 0 8px 16px rgba(0,0,0,0.3);
+            }
+            body {
+                padding: 1rem 0.5rem;
+                gap: 1rem;
+            }
+            .header-card, .download-card, .footer-card {
+                padding: 1.2rem;
+            }
+            .header-card {
+                flex-direction: column;
+                align-items: center;
+                gap: 1rem;
+            }
+            .lang-clock-wrap {
+                width: 100%;
+                justify-content: center;
+                gap: 0.8rem;
+            }
+            /* 移动端展开面板居中显示 */
+            .lang-switch-panel {
+                top: auto;
+                bottom: 20px;
+                right: 50%;
+                transform: translateX(50%);
+                min-width: 90%;
+            }
+            .lang-btn {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.8rem;
+            }
+            .download-table th, .download-table td {
+                padding: 1rem;
+                white-space: nowrap;
+            }
+            .btn {
+                padding: 0.7rem 1.5rem;
+                font-size: 0.95rem;
+            }
+            .social-links {
+                width: 100%;
+                justify-content: center;
+            }
+            .social-link {
+                padding: 0.6rem 1rem;
+                font-size: 0.9rem;
+            }
+            .facts-list {
+                grid-template-columns: 1fr;
+            }
+        }
+        @media (max-width: 480px) {
+            .lang-clock-wrap {
+                flex-direction: column;
+                gap: 0.8rem;
+            }
+        }
+    </style>
+    <!-- 字体图标 -->
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- 背景层 -->
+    <div class="bg-grad"></div>
+    <div class="bg-particle" id="particleBg"></div>
+    <!-- 核心容器 -->
+    <div class="container">
+        <!-- 头部标题卡片 - 含语言切换图标+时钟 -->
+        <div class="header-card acrylic">
+            <div class="header-logo">
+                <i class="fas fa-wrench"></i>
+                <h1 class="header-title" data-lang="title">长途旅行中文车间工具</h1>
+            </div>
+            <div class="lang-clock-wrap">
+                <!-- 语言切换图标按钮（默认显示） -->
+                <button class="lang-toggle-btn" id="langToggleBtn">
+                    <i class="fas fa-globe"></i>
+                </button>
+                <!-- 语言切换面板（默认隐藏，点击图标展开） -->
+                <div class="lang-switch-panel" id="langSwitchPanel">
+                    <button class="lang-btn active" data-lang-code="zh-cn">简体中文</button>
+                    <button class="lang-btn" data-lang-code="zh-tw">繁體中文</button>
+                    <button class="lang-btn" data-lang-code="en">English</button>
+                    <button class="lang-btn" data-lang-code="es">Español</button>
+                    <button class="lang-btn" data-lang-code="fr">Français</button>
+                    <button class="lang-btn" data-lang-code="yue">粵語</button>
+                </div>
+                <!-- 时钟 -->
+                <div class="clock">
+                    <i class="fas fa-clock"></i>
+                    <span id="bjTime">2026-02-27 00:00:00</span>
+                </div>
+            </div>
+        </div>
+        <!-- 下载核心卡片 -->
+        <div class="download-card acrylic">
+            <h2 class="download-title" data-lang="downloadTitle">版本下载（最新v8.6.3 · 正版盗版通用）</h2>
+            <table class="download-table">
+                <thead>
+                    <tr>
+                        <th data-lang="versionType">版本类型</th>
+                        <th data-lang="versionNum">版本号</th>
+                        <th data-lang="operation">操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td data-lang="generalVersion">通用版 <span class="version-tag">2026-01-01</span></td>
+                        <td>v8.6.3</td>
+                        <td><a href="https://gitlab.com/MFSDev-NET/workshop-tld-chinese/-/raw/WorkshopDatabase8.6/Workshop/车间中文正版_加载修复.exe?inline=false" target="_blank" class="btn btn-primary" data-lang="downloadBtn">立即下载</a></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <!-- 底部社交卡片 -->
+        <div class="footer-card acrylic">
+            <div class="social-links">
+                <a href="https://b23.tv/5e9cAIY" target="_blank" class="social-link" data-lang="bilibili">
+                    <i class="fas fa-video"></i> B站教程
+                </a>
+                <a href="https://qun.qq.com/universal-share/share?ac=1&authKey=CwaBnBRwvXObwKp3KWKp2s3lVxOzGG4wlWPhaRKN%2B9ZJjEkiWBNHl2Enw0zlcmBc&busi_data=eyJncm91cENvZGUiOiIyOTM2NTE5NjciLCJ0b2tlbiI6IkdwcnBHM0lZRS9MQi9PRHhEd1RRNVAxWVhiakU2ODFqVFBEZFcyV0ZkclpvZ250MXpQSWpGcy9xUjBrK2lpeE0iLCJ1aW4iOiIzODA3NjE3NzAzIn0%3D&data=sE7yj0bt5HONB-kmWNAgcNcXuqV6GoW405v3Dudf4l34k2pHsycjbleXJVNAzcwXirFAQb05WZ1pEt01f90GEw&svctype=4&tempid=h5_group_info" target="_blank" class="social-link" data-lang="qqGroup">
+                    <i class="fas fa-comments"></i> QQ交流群
+                </a>
+            </div>
+            <!-- GitLab声明 -->
+            <div class="gitlab-tip" data-lang="gitlabTip">
+                <i class="fas fa-info-circle"></i> 项目已迁移至极狐GitLab维护，新功能与BUG修复持续开发中，敬请期待！本版本为正版盗版通用版，无需区分版本下载
+            </div>
+            <!-- 趣味知识点 -->
+            <div class="tld-facts">
+                <ul class="facts-list">
+                    <li class="facts-item" data-lang="fact1">长途旅行车间工具由4人共创，中文版本仅1人独立维护</li>
+                    <li class="facts-item" data-lang="fact2">本汉化版累计修复超20个原版工具的中英文适配BUG</li>
+                    <li class="facts-item" data-lang="fact3">工具支持自定义模组加载顺序，解决90%的模组冲突问题</li>
+                    <li class="facts-item" data-lang="fact4">汉化版平均每7天更新一次，紧跟原版功能迭代节奏</li>
+                    <li class="facts-item" data-lang="fact5">超5000名玩家使用本汉化版进行长途旅行模组游玩</li>
+                    <li class="facts-item" data-lang="fact6">核心加载引擎基于C#开发，适配Windows全版本系统</li>
+                </ul>
+            </div>
+            <!-- 版权 -->
+            <div class="copyright" data-lang="copyright">© 2026 长途旅行中文车间工具 版权所有 | 仅供学习研究使用</div>
+        </div>
+    </div>
+
+    <script>
+        // 1. 多语言配置对象（简/繁/英/西/法/粤）
+        const langData = {
+            'zh-cn': {
+                title: '长途旅行中文车间工具',
+                downloadTitle: '版本下载（最新v8.6.3 · 正版盗版通用）',
+                versionType: '版本类型',
+                versionNum: '版本号',
+                operation: '操作',
+                generalVersion: '通用版',
+                downloadBtn: '立即下载',
+                bilibili: 'B站教程',
+                qqGroup: 'QQ交流群',
+                gitlabTip: '项目已迁移至极狐GitLab维护，新功能与BUG修复持续开发中，敬请期待！本版本为正版盗版通用版，无需区分版本下载',
+                fact1: '长途旅行车间工具由4人共创，中文版本仅1人独立维护',
+                fact2: '本汉化版累计修复超20个原版工具的中英文适配BUG',
+                fact3: '工具支持自定义模组加载顺序，解决90%的模组冲突问题',
+                fact4: '汉化版平均每7天更新一次，紧跟原版功能迭代节奏',
+                fact5: '超5000名玩家使用本汉化版进行长途旅行模组游玩',
+                fact6: '核心加载引擎基于C#开发，适配Windows全版本系统',
+                copyright: '© 2026 长途旅行中文车间工具 版权所有 | 仅供学习研究使用'
+            },
+            'zh-tw': {
+                title: '長途旅行中文車間工具',
+                downloadTitle: '版本下載（最新v8.6.3 · 正版盜版通用）',
+                versionType: '版本類型',
+                versionNum: '版本號',
+                operation: '操作',
+                generalVersion: '通用版',
+                downloadBtn: '立即下載',
+                bilibili: 'B站教學',
+                qqGroup: 'QQ交流群',
+                gitlabTip: '專案已遷移至極狐GitLab維護，新功能與BUG修復持續開發中，敬請期待！本版本為正版盜版通用版，無需區分版本下載',
+                fact1: '長途旅行車間工具由4人共創，中文版本僅1人獨立維護',
+                fact2: '本漢化版累計修復超20個原版工具的中英文適配BUG',
+                fact3: '工具支援自定義模組加載順序，解決90%的模組衝突問題',
+                fact4: '漢化版平均每7天更新一次，緊跟原版功能迭代節奏',
+                fact5: '超5000名玩家使用本漢化版進行長途旅行模組遊玩',
+                fact6: '核心加載引擎基於C#開發，適配Windows全版本系統',
+                copyright: '© 2026 長途旅行中文車間工具 版權所有 | 僅供學習研究使用'
+            },
+            'en': {
+                title: 'The Long Drive Chinese Workshop Tool',
+                downloadTitle: 'Version Download (Latest v8.6.3 · For All Versions)',
+                versionType: 'Version Type',
+                versionNum: 'Version No.',
+                operation: 'Action',
+                generalVersion: 'Universal Version',
+                downloadBtn: 'Download Now',
+                bilibili: 'Bilibili Tutorial',
+                qqGroup: 'QQ Discussion Group',
+                gitlabTip: 'The project has been migrated to GitLab for maintenance. New features and bug fixes are in continuous development! This version is universal for all game versions, no need to distinguish.',
+                fact1: 'The Long Drive Workshop Tool was co-created by 4 people, while the Chinese version is maintained by only 1 person independently.',
+                fact2: 'This Chinese version has fixed more than 20 Chinese-English adaptation bugs of the original tool.',
+                fact3: 'The tool supports custom mod loading order, solving 90% of mod conflict problems.',
+                fact4: 'The Chinese version is updated every 7 days on average, keeping up with the original function iteration.',
+                fact5: 'More than 5000 players use this Chinese version for The Long Drive mod gameplay.',
+                fact6: 'The core loading engine is developed based on C#, compatible with all Windows systems.',
+                copyright: '© 2026 The Long Drive Chinese Workshop Tool. All rights reserved | For study and research only.'
+            },
+            'es': {
+                title: 'Herramienta de Taller Chino de The Long Drive',
+                downloadTitle: 'Descarga de Versión (Última v8.6.3 · Para Todas las Versiones)',
+                versionType: 'Tipo de Versión',
+                versionNum: 'Número de Versión',
+                operation: 'Acción',
+                generalVersion: 'Versión Universal',
+                downloadBtn: 'Descargar Ahora',
+                bilibili: 'Tutorial de Bilibili',
+                qqGroup: 'Grupo de Discusión QQ',
+                gitlabTip: 'El proyecto se ha migrado a GitLab para mantenimiento. ¡Nuevas funciones y correcciones de errores están en desarrollo continuo! Esta versión es universal para todas las versiones del juego, sin necesidad de distinguir.',
+                fact1: 'La Herramienta de Taller de The Long Drive fue creada conjuntamente por 4 personas, mientras que la versión china es mantenida por solo 1 persona de forma independiente.',
+                fact2: 'Esta versión china ha arreglado más de 20 errores de adaptación chino-inglés de la herramienta original.',
+                fact3: 'La herramienta admite el orden de carga de mods personalizado, resolviendo el 90% de los problemas de conflicto de mods.',
+                fact4: 'La versión china se actualiza cada 7 días en promedio, al día con la iteración de funciones original.',
+                fact5: 'Más de 5000 jugadores usan esta versión china para el juego con mods de The Long Drive.',
+                fact6: 'El motor de carga core está desarrollado basado en C#, compatible con todos los sistemas Windows.',
+                copyright: '© 2026 Herramienta de Taller Chino de The Long Drive. Todos los derechos reservados | Solo para estudio e investigación.'
+            },
+            'fr': {
+                title: 'Outil d\'Atelier Chinois de The Long Drive',
+                downloadTitle: 'Téléchargement de Version (Dernière v8.6.3 · Pour Toutes les Versions)',
+                versionType: 'Type de Version',
+                versionNum: 'Numéro de Version',
+                operation: 'Action',
+                generalVersion: 'Version Universelle',
+                downloadBtn: 'Télécharger Maintenant',
+                bilibili: 'Tutoriel Bilibili',
+                qqGroup: 'Groupe de Discussion QQ',
+                gitlabTip: 'Le projet a été migré vers GitLab pour maintenance. De nouvelles fonctionnalités et corrections de bugs sont en développement continu ! Cette version est universelle pour toutes les versions du jeu, pas besoin de distinguer.',
+                fact1: 'L\'Outil d\'Atelier de The Long Drive a été créé conjointement par 4 personnes, tandis que la version chinoise est maintenue par une seule personne indépendamment.',
+                fact2: 'Cette version chinoise a corrigé plus de 20 bugs d\'adaptation chinois-anglais de l\'outil original.',
+                fact3: 'L\'outil prend en charge l\'ordre de chargement des mods personnalisé, résolvant 90% des problèmes de conflit de mods.',
+                fact4: 'La version chinoise est mise à jour toutes les 7 jours en moyenne, suivant l\'itération des fonctions originales.',
+                fact5: 'Plus de 5000 joueurs utilisent cette version chinoise pour le jeu avec mods de The Long Drive.',
+                fact6: 'Le moteur de chargement core est développé sur la base de C#, compatible avec tous les systèmes Windows.',
+                copyright: '© 2026 Outil d\'Atelier Chinois de The Long Drive. Tous droits réservés | Uniquement pour étude et recherche.'
+            },
+            'yue': {
+                title: '長途旅行中文車間工具（粵語版）',
+                downloadTitle: '版本下載（最新v8.6.3 · 正版盜版都用到）',
+                versionType: '版本類型',
+                versionNum: '版本號',
+                operation: '操作',
+                generalVersion: '通用版',
+                downloadBtn: '即刻下載',
+                bilibili: 'B站教學片',
+                qqGroup: 'QQ吹水群',
+                gitlabTip: '項目已經搬咗去極狐GitLab維護，新功能同BUG修復不斷開發中，敬請期待！呢個版本正版盜版都用到，唔使分版本下載',
+                fact1: '長途旅行車間工具由4個人一齊搞，中文版本淨係得1個人獨立維護',
+                fact2: '呢個漢化版累計修復咗超過20個原版工具嘅中英文適配BUG',
+                fact3: '工具支援自定義模組加載順序，解決到90%嘅模組衝突問題',
+                fact4: '漢化版平均每7日更新一次，緊跟原版功能更新節奏',
+                fact5: '超過5000個玩家用呢個漢化版玩長途旅行模組',
+                fact6: '核心加載引擎基於C#開發，適配所有Windows系統',
+                copyright: '© 2026 長途旅行中文車間工具 版權所有 | 淨供學習研究使用'
+            }
+        };
+
+        // 2. 语言切换面板展开/隐藏逻辑
+        const langToggleBtn = document.getElementById('langToggleBtn');
+        const langSwitchPanel = document.getElementById('langSwitchPanel');
+        const langBtns = document.querySelectorAll('.lang-btn');
+        const langElements = document.querySelectorAll('[data-lang]');
+
+        // 点击图标展开/隐藏面板
+        langToggleBtn.addEventListener('click', () => {
+            langSwitchPanel.classList.toggle('show');
+        });
+
+        // 点击页面其他区域关闭面板
+        document.addEventListener('click', (e) => {
+            if (!langToggleBtn.contains(e.target) && !langSwitchPanel.contains(e.target)) {
+                langSwitchPanel.classList.remove('show');
+            }
+        });
+
+        // 语言切换逻辑
+        langBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // 移除所有激活状态
+                langBtns.forEach(b => b.classList.remove('active'));
+                // 添加当前激活状态
+                btn.classList.add('active');
+                // 获取当前语言编码
+                const langCode = btn.dataset.langCode;
+                // 替换页面文本
+                if (langData[langCode]) {
+                    langElements.forEach(el => {
+                        const key = el.dataset.lang;
+                        if (langData[langCode][key]) {
+                            el.textContent = langData[langCode][key];
+                        }
+                    });
+                    // 修改页面lang属性
+                    document.documentElement.lang = langCode;
+                }
+                // 移动端自动关闭面板（提升体验）
+                if (window.innerWidth <= 768) {
+                    langSwitchPanel.classList.remove('show');
+                }
+            });
+        });
+
+        // 3. 轻量化粒子背景
+        function createParticles() {
+            const container = document.getElementById('particleBg');
+            const count = 80;
+            const colors = ['#0091FF', '#0077E6', '#1a1a2e'];
+            for (let i = 0; i < count; i++) {
+                const particle = document.createElement('div');
+                const size = Math.random() * 3 + 1;
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                const left = Math.random() * 100;
+                const duration = Math.random() * 30 + 20;
+                const delay = Math.random() * 20;
+                particle.style.cssText = `
+                    position: absolute;
+                    top: -5px;
+                    left: ${left}%;
+                    width: ${size}px;
+                    height: ${size}px;
+                    background: ${color};
+                    border-radius: 50%;
+                    opacity: ${Math.random() * 0.5 + 0.2};
+                    pointer-events: none;
+                    animation: particleFall ${duration}s linear infinite ${delay}s;
+                `;
+                container.appendChild(particle);
+            }
+        }
+
+        // 4. 粒子下落动画
+        document.head.insertAdjacentHTML('beforeend', `
+            <style>
+                @keyframes particleFall {
+                    0% { transform: translateY(0) translateX(0) rotate(0deg); }
+                    100% { transform: translateY(100vh) translateX(${Math.random() * 40 - 20}px) rotate(360deg); }
+                }
+            </style>
+        `);
+
+        // 5. 动态北京时间时钟
+        function updateTime() {
+            const now = new Date();
+            const pad = n => n.toString().padStart(2, '0');
+            const timeStr = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+            document.getElementById('bjTime').innerText = timeStr;
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        // 6. 页面加载初始化
+        window.addEventListener('load', () => {
+            createParticles();
+            // 页面淡入效果
+            document.body.style.opacity = '0';
+            document.body.style.transition = 'opacity 0.5s ease';
+            setTimeout(() => {
+                document.body.style.opacity = '1';
+            }, 100);
+        });
+    </script>
+</body>
+</html>
