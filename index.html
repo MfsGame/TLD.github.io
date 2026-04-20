@@ -1,723 +1,751 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>长途旅行中文车间工具</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
-            letter-spacing: 0.4px;
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        :root {
-            --primary: #0091FF;
-            --primary-light: rgba(0,145,255,0.15);
-            --primary-dark: #0077E6;
-            --primary-gradient: linear-gradient(90deg, #0091FF, #00B8FF, #0091FF);
-            --warning: #FFC107;
-            --danger: #FF4D4D;
-            --dark-1: #121212;
-            --dark-2: #1E1E1E;
-            --dark-3: #2D2D2D;
-            --dark-4: #383838;
-            --text-main: #F5F5F5;
-            --text-secondary: #B0B0B0;
-            --text-tertiary: #787878;
-            --blur: 16px;
-            --radius-sm: 8px;
-            --radius-md: 12px;
-            --radius-lg: 16px;
-            --shadow: 0 8px 32px rgba(0,0,0,0.4);
-        }
-        body {
-            background: var(--dark-1);
-            color: var(--text-main);
-            min-height: 100vh;
-            padding: 2rem 1rem;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 1.5rem;
-            overflow-x: hidden;
-            position: relative;
-        }
-        /* 动态渐变背景层 */
-        .bg-grad {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, var(--dark-1) 0%, #1a1a2e 50%, var(--dark-1) 100%);
-            background-size: 200% 200%;
-            animation: bgFlow 25s ease infinite;
-            z-index: -3;
-        }
-        @keyframes bgFlow {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-        /* 轻量粒子背景 */
-        .bg-particle {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -2;
-            pointer-events: none;
-        }
-        /* 亚克力模糊层 */
-        .acrylic {
-            background: rgba(30,30,30,0.7);
-            backdrop-filter: blur(var(--blur));
-            -webkit-backdrop-filter: blur(var(--blur));
-            border: 1px solid rgba(60,60,60,0.5);
-            border-radius: var(--radius-md);
-            box-shadow: var(--shadow);
-        }
-        /* 核心容器 */
-        .container {
-            width: 100%;
-            max-width: 1200px;
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-        }
-        /* 头部标题卡片 - 优化语言切换布局 */
-        .header-card {
-            padding: 1.5rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 1.2rem;
-        }
-        .header-logo {
-            display: flex;
-            align-items: center;
-            gap: 0.8rem;
-        }
-        .header-title {
-            font-size: clamp(1.5rem, 3vw, 2.2rem);
-            font-weight: 600;
-            color: var(--text-main);
-        }
-        .header-title i {
-            color: var(--primary);
-            font-size: 1.2em;
-        }
-        /* 语言切换核心样式 - 图标触发+隐藏展开 */
-        .lang-clock-wrap {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            flex-wrap: wrap;
-            justify-content: flex-end;
-        }
-        /* 语言图标按钮（默认显示） */
-        .lang-toggle-btn {
-            padding: 0.5rem;
-            background: var(--dark-2);
-            border: 1px solid var(--dark-4);
-            border-radius: var(--radius-sm);
-            color: var(--primary);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s ease;
-        }
-        .lang-toggle-btn:hover {
-            background: var(--primary-light);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,145,255,0.2);
-        }
-        .lang-toggle-btn i {
-            font-size: 1.1rem;
-        }
-        /* 语言切换面板（默认隐藏） */
-        .lang-switch-panel {
-            display: none;
-            position: absolute;
-            top: 80px;
-            right: 2rem;
-            background: var(--dark-2);
-            border: 1px solid var(--dark-4);
-            border-radius: var(--radius-sm);
-            padding: 0.8rem;
-            gap: 0.6rem;
-            flex-wrap: wrap;
-            justify-content: center;
-            box-shadow: var(--shadow);
-            z-index: 999;
-            width: auto;
-            min-width: 280px;
-        }
-        /* 展开状态 */
-        .lang-switch-panel.show {
-            display: flex;
-        }
-        /* 语言按钮样式 */
-        .lang-btn {
-            padding: 0.45rem 0.9rem;
-            background: var(--dark-3);
-            border: 1px solid var(--dark-4);
-            border-radius: var(--radius-sm);
-            color: var(--text-secondary);
-            cursor: pointer;
-            font-size: 0.85rem;
-            font-weight: 500;
-            transition: all 0.2s ease;
-            white-space: nowrap;
-        }
-        .lang-btn:hover {
-            background: var(--primary-light);
-            color: var(--primary);
-            border-color: var(--primary-light);
-            transform: translateY(-1px);
-        }
-        .lang-btn.active {
-            background: var(--primary);
-            color: #fff;
-            border-color: var(--primary);
-        }
-        /* 时钟样式 */
-        .clock {
-            font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
-            color: var(--primary);
-            font-size: clamp(1rem, 2vw, 1.2rem);
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.5rem 1rem;
-            background: var(--dark-2);
-            border-radius: var(--radius-sm);
-            border: 1px solid var(--dark-4);
-            white-space: nowrap;
-        }
-        /* 下载核心卡片 */
-        .download-card {
-            padding: 2rem;
-            display: flex;
-            flex-direction: column;
-            gap: 2rem;
-        }
-        .download-title {
-            font-size: clamp(1.2rem, 2.5vw, 1.5rem);
-            color: var(--text-secondary);
-            font-weight: 500;
-            margin-bottom: 0.5rem;
-        }
-        .download-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        .download-table th {
-            padding: 1rem 1.5rem;
-            text-align: left;
-            background: var(--dark-2);
-            border-radius: var(--radius-sm) var(--radius-sm) 0 0;
-            color: var(--text-main);
-            font-weight: 600;
-            font-size: 1.1rem;
-        }
-        .download-table td {
-            padding: 1.5rem;
-            border-bottom: 1px solid var(--dark-4);
-        }
-        .version-tag {
-            display: inline-block;
-            padding: 0.3rem 0.8rem;
-            background: var(--primary-light);
-            color: var(--primary);
-            border-radius: 20px;
-            font-size: 0.9rem;
-            font-weight: 500;
-        }
-        /* 下载按钮 - 保留渐变+滑动动效 */
-        .btn {
-            padding: 0.8rem 2rem;
-            border: none;
-            border-radius: var(--radius-sm);
-            font-size: 1rem;
-            font-weight: 500;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-            z-index: 1;
-        }
-        .btn-primary {
-            background: var(--primary);
-            color: white;
-            box-shadow: 0 2px 8px rgba(0,145,255,0.2);
-        }
-        .btn-primary:hover {
-            background: var(--primary-dark);
-            box-shadow: 0 6px 20px rgba(0,145,255,0.4);
-            transform: translateY(-3px);
-        }
-        .btn-primary:active {
-            transform: translateY(1px) translateX(2px);
-            box-shadow: 0 1px 4px rgba(0,145,255,0.3);
-            background: var(--primary-gradient);
-            background-size: 200% 100%;
-            animation: btnGrad 0.3s ease-in-out;
-        }
-        @keyframes btnGrad {
-            0% { background-position: 0% 50%; }
-            100% { background-position: 100% 50%; }
-        }
-        /* 底部社交卡片 */
-        .footer-card {
-            padding: 1.5rem 2rem;
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-        .social-links {
-            display: flex;
-            gap: 1rem;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-        .social-link {
-            padding: 0.7rem 1.2rem;
-            background: var(--dark-2);
-            color: var(--text-main);
-            text-decoration: none;
-            border-radius: var(--radius-sm);
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-weight: 500;
-        }
-        .social-link:hover {
-            background: var(--primary-light);
-            color: var(--primary);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,145,255,0.2);
-        }
-        /* GitLab声明样式 */
-        .gitlab-tip {
-            width: 100%;
-            padding: 1rem;
-            background: var(--dark-2);
-            border-left: 4px solid var(--primary);
-            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-            color: var(--text-secondary);
-            font-size: 0.95rem;
-            text-align: center;
-            margin: 0.5rem 0;
-        }
-        /* 趣味知识点样式 */
-        .tld-facts {
-            width: 100%;
-            padding: 1rem;
-            background: var(--dark-2);
-            border-radius: var(--radius-sm);
-            border: 1px solid var(--dark-4);
-            margin-top: 0.5rem;
-        }
-        .facts-list {
-            list-style: none;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 0.8rem;
-        }
-        .facts-item {
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-            line-height: 1.6;
-            padding-left: 1rem;
-            border-left: 2px solid var(--primary-light);
-        }
-        .copyright {
-            color: var(--text-tertiary);
-            font-size: 0.9rem;
-            margin-top: 1rem;
-            text-align: center;
-        }
-        /* 响应式适配 - 优化移动端展开面板位置 */
-        @media (max-width: 768px) {
-            :root {
-                --blur: 10px;
-                --shadow: 0 8px 16px rgba(0,0,0,0.3);
-            }
-            body {
-                padding: 1rem 0.5rem;
-                gap: 1rem;
-            }
-            .header-card, .download-card, .footer-card {
-                padding: 1.2rem;
-            }
-            .header-card {
-                flex-direction: column;
-                align-items: center;
-                gap: 1rem;
-            }
-            .lang-clock-wrap {
-                width: 100%;
-                justify-content: center;
-                gap: 0.8rem;
-            }
-            /* 移动端展开面板居中显示 */
-            .lang-switch-panel {
-                top: auto;
-                bottom: 20px;
-                right: 50%;
-                transform: translateX(50%);
-                min-width: 90%;
-            }
-            .lang-btn {
-                padding: 0.4rem 0.8rem;
-                font-size: 0.8rem;
-            }
-            .download-table th, .download-table td {
-                padding: 1rem;
-                white-space: nowrap;
-            }
-            .btn {
-                padding: 0.7rem 1.5rem;
-                font-size: 0.95rem;
-            }
-            .social-links {
-                width: 100%;
-                justify-content: center;
-            }
-            .social-link {
-                padding: 0.6rem 1rem;
-                font-size: 0.9rem;
-            }
-            .facts-list {
-                grid-template-columns: 1fr;
-            }
-        }
-        @media (max-width: 480px) {
-            .lang-clock-wrap {
-                flex-direction: column;
-                gap: 0.8rem;
-            }
-        }
-    </style>
-    <!-- 字体图标 -->
-    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title data-i18n="title">TLDWorkshop 下载</title>
+  <meta content="width=device-width, initial-scale=1" name="viewport">
+  <style>
+:root {
+  --black: #000000;
+  --pale-turquoise: #b6fff5;
+  --bg-color: var(--black);
+  --text-color: var(--pale-turquoise);
+  --border-color: var(--pale-turquoise);
+  --hover-bg: var(--pale-turquoise);
+  --hover-text: var(--black);
+  --muted-opacity: 0.3;
+}
+.light-mode {
+  --bg-color: #f0f9f8;
+  --text-color: #005f5f;
+  --border-color: #008888;
+  --hover-bg: #008888;
+  --hover-text: #ffffff;
+  --muted-opacity: 0.4;
+}
+* {
+  box-sizing: border-box;
+  -webkit-text-size-adjust: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.cube-top-svg {
+  vertical-align: bottom;
+  stroke-width: 2px;
+}
+a {
+  color: inherit;
+}
+html {
+  height: 100%;
+}
+body {
+  margin: 0;
+  min-height: 100%;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  font-family: "Microsoft YaHei", "微软雅黑", Consolas, monospace;
+  font-size: 1rem;
+  line-height: 1.6;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+h1, h2, h3, h4, h5, h6 {
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+h4 {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 24px;
+}
+.main-wrapper {
+  width: 100%;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding-top: 38.2vh;
+  padding-bottom: 38.2vh;
+  display: flex;
+}
+.cube-wrapper {
+  width: 88vw;
+  max-width: 71.875rem;
+  flex-direction: column;
+  display: flex;
+}
+.floating-block {
+  border: 2px solid var(--border-color);
+  position: relative;
+  transition: transform 0.5s ease-out;
+}
+.floating-block.down {
+  transform: translate3d(0px, 0%, 0px);
+  transition: transform 0.5s ease-in-out;
+}
+.floating-block.up {
+  transform: translate3d(0px, -100%, 0px);
+  transition: transform 0.3s ease-in-out;
+}
+.static-cube {
+  width: 100%;
+  max-width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  position: relative;
+}
+.block-content {
+  z-index: 0;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+  text-decoration: none;
+  transition: color .2s, box-shadow .2s, background-color .2s;
+  display: flex;
+  position: relative;
+}
+.block-content:hover {
+  z-index: 1;
+  background-color: var(--hover-bg);
+  box-shadow: 0 0 10rem .1px var(--hover-bg);
+  color: var(--hover-text);
+}
+.block-title-wrapper {
+  flex: 1;
+  justify-content: flex-start;
+  padding-left: 1.125rem;
+  padding-right: 1.125rem;
+  display: flex;
+}
+.block-title {
+  text-transform: capitalize;
+  margin-top: 0;
+  margin-bottom: 0;
+  font-size: 1.125rem;
+  font-weight: 400;
+}
+.block-title.muted {
+  opacity: var(--muted-opacity);
+}
+.block-actions-wrapper {
+  justify-content: flex-end;
+  padding-right: 1.125rem;
+  display: flex;
+}
+.icon {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+.icon.margin-right {
+  margin-left: 2.25rem;
+}
+.icon.muted {
+  opacity: var(--muted-opacity);
+}
+.cube-top {
+  z-index: 0;
+  width: 100%;
+  position: absolute;
+  top: 7px;
+  left: -2px;
+  transform: translate(0, -100%);
+}
+.cube-top-svg {
+  width: 88vw;
+  max-width: 71.875rem;
+  color: var(--border-color);
+}
+.static-block {
+  z-index: 0;
+  border: 2px solid var(--border-color);
+  background-color: var(--bg-color);
+  margin-top: -2px;
+  position: relative;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+.block-year {
+  width: 4.875rem;
+  padding-right: 1.125rem;
+}
+.block-client {
+  width: 13.6875rem;
+  padding-right: 1.125rem;
+}
+.block-studio {
+  width: 12rem;
+  padding-right: 1.125rem;
+}
+.block-type {
+  width: 16rem;
+}
+#float-trigger {
+  width: 75%;
+  height: 75%;
+  position: absolute;
+}
+@media screen and (max-width: 991px) {
+  .main-wrapper {
+    padding-top: 22.2vh;
+    padding-bottom: 22.2vh;
+  }
+  .block-title {
+    font-size: 1rem;
+  }
+  .block-year {
+    width: 4.375rem;
+  }
+  .block-client {
+    width: 11.25rem;
+  }
+  .block-studio {
+    display: none;
+  }
+}
+@media screen and (max-width: 479px) {
+  .block-title-wrapper {
+    padding-left: .875rem;
+    padding-right: .875rem;
+  }
+  .block-year {
+    padding-right: .875rem;
+  }
+  .block-client {
+    width: 8rem;
+  }
+  .block-type {
+    display: none;
+  }
+}
+.lang-bar {
+  position: fixed;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  display: flex;
+  gap: 6px;
+}
+.lang-btn, .footer-btn, .header-icon-btn {
+  background: var(--bg-color);
+  color: var(--text-color);
+  border: 2px solid var(--border-color);
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: color 0.2s, background-color 0.2s, box-shadow 0.2s, border-color 0.2s;
+}
+.lang-btn:hover, .footer-btn:hover, .header-icon-btn:hover {
+  background-color: var(--hover-bg);
+  color: var(--hover-text);
+  box-shadow: 0 0 10rem 0.1px var(--hover-bg);
+}
+.lang-btn.active {
+  background-color: var(--hover-bg);
+  color: var(--hover-text);
+}
+.agreement-btn {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+}
+.signature-btn {
+  position: fixed;
+  bottom: 10px;
+  left: 10px;
+}
+.header-icons {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  z-index: 9999;
+  display: flex;
+  gap: 8px;
+}
+.dynamic-text {
+  text-align: center;
+  padding: 15px 0;
+  font-size: 14px;
+  color: var(--text-color);
+  opacity: 0.8;
+  min-height: 20px;
+}
+.visit-counter {
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  color: var(--text-color);
+  opacity: 0.7;
+  font-size: 12px;
+  z-index: 999;
+}
+.modal-overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.7);
+  z-index: 99999;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.modal-overlay.show {
+  opacity: 1;
+}
+.modal-box {
+  background: rgba(20, 20, 20, 0.85);
+  color: #fff;
+  width: 90%;
+  max-width: 650px;
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.1);
+  position: relative;
+  max-height: 80vh;
+  overflow-y: auto;
+  transform: translateY(20px);
+  transition: transform 0.3s ease;
+}
+.modal-overlay.show .modal-box {
+  transform: translateY(0);
+}
+.modal-close {
+  position: absolute;
+  top: 10px; right: 12px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 16px;
+}
+.modal-title {
+  font-size: 16px;
+  margin-bottom: 10px;
+  text-align: center;
+}
+.modal-desc {
+  font-size: 13px;
+  color: #00ccff;
+  text-align: center;
+  margin-bottom: 15px;
+}
+.modal-text, .agreement-text {
+  font-size: 12px;
+  color: #ccc;
+  line-height: 1.6;
+}
+.agreement-text {
+  font-size: 12px;
+  color: #ccc;
+  line-height: 1.7;
+  text-align: left;
+  white-space: pre-line;
+}
+  </style>
 </head>
 <body>
-    <!-- 背景层 -->
-    <div class="bg-grad"></div>
-    <div class="bg-particle" id="particleBg"></div>
-    <!-- 核心容器 -->
-    <div class="container">
-        <!-- 头部标题卡片 - 含语言切换图标+时钟 -->
-        <div class="header-card acrylic">
-            <div class="header-logo">
-                <i class="fas fa-wrench"></i>
-                <h1 class="header-title" data-lang="title">长途旅行中文车间工具</h1>
-            </div>
-            <div class="lang-clock-wrap">
-                <!-- 语言切换图标按钮（默认显示） -->
-                <button class="lang-toggle-btn" id="langToggleBtn">
-                    <i class="fas fa-globe"></i>
-                </button>
-                <!-- 语言切换面板（默认隐藏，点击图标展开） -->
-                <div class="lang-switch-panel" id="langSwitchPanel">
-                    <button class="lang-btn active" data-lang-code="zh-cn">简体中文</button>
-                    <button class="lang-btn" data-lang-code="zh-tw">繁體中文</button>
-                    <button class="lang-btn" data-lang-code="en">English</button>
-                    <button class="lang-btn" data-lang-code="es">Español</button>
-                    <button class="lang-btn" data-lang-code="fr">Français</button>
-                    <button class="lang-btn" data-lang-code="yue">粵語</button>
-                </div>
-                <!-- 时钟 -->
-                <div class="clock">
-                    <i class="fas fa-clock"></i>
-                    <span id="bjTime">2026-02-27 00:00:00</span>
-                </div>
-            </div>
+
+<button class="footer-btn agreement-btn" data-i18n="agreement">协议</button>
+<div class="lang-bar">
+  <button class="lang-btn active" data-lang="zh">中</button>
+  <button class="lang-btn" data-lang="en">EN</button>
+  <button class="lang-btn" data-lang="ru">RU</button>
+</div>
+
+<div class="header-icons">
+  <button class="header-icon-btn" id="themeToggle">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </button>
+  <a href="https://gitlab.com/MFSDev-NET/tldweb" target="_blank" class="header-icon-btn">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+      <path d="M22.65 14.39L19.2 3.92c-.33-.99-1.68-.99-2 0L13.82 14.39H10.18L6.8 3.92c-.33-.99-1.68-.99-2 0L1.35 14.39c-.33 1 .24 2.13 1.22 2.13h18.86c.98 0 1.55-1.13 1.22-2.13z"/>
+    </svg>
+  </a>
+</div>
+
+<main id="home" class="main-wrapper">
+  <div id="float-trigger"></div>
+  <div class="cube-wrapper">
+    <div class="floating-block down">
+      <div class="cube-top">
+        <div class="cube-top-svg">
+          <svg viewBox="0 0 1400 218"><path d="M140 0h1120l140 218H0z" fill="none" stroke="currentColor"></path></svg>
         </div>
-        <!-- 下载核心卡片 -->
-        <div class="download-card acrylic">
-            <h2 class="download-title" data-lang="downloadTitle">版本下载（最新v8.6.3 · 正版盗版通用）</h2>
-            <table class="download-table">
-                <thead>
-                    <tr>
-                        <th data-lang="versionType">版本类型</th>
-                        <th data-lang="versionNum">版本号</th>
-                        <th data-lang="operation">操作</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td data-lang="generalVersion">通用版 <span class="version-tag">2026-01-01</span></td>
-                        <td>v8.6.3</td>
-                        <td><a href="https://gitlab.com/MFSDev-NET/workshop-tld-chinese/-/raw/WorkshopDatabase8.6/Workshop/车间中文正版_加载修复.exe?inline=false" target="_blank" class="btn btn-primary" data-lang="downloadBtn">立即下载</a></td>
-                    </tr>
-                </tbody>
-            </table>
+      </div>
+      <div class="block-content">
+        <div class="block-title-wrapper">
+          <h4 class="block-title" data-i18n="site_title">TLDWorkshop 官方社区下载站!</h4>
         </div>
-        <!-- 底部社交卡片 -->
-        <div class="footer-card acrylic">
-            <div class="social-links">
-                <a href="https://b23.tv/5e9cAIY" target="_blank" class="social-link" data-lang="bilibili">
-                    <i class="fas fa-video"></i> B站教程
-                </a>
-                <a href="https://qun.qq.com/universal-share/share?ac=1&authKey=CwaBnBRwvXObwKp3KWKp2s3lVxOzGG4wlWPhaRKN%2B9ZJjEkiWBNHl2Enw0zlcmBc&busi_data=eyJncm91cENvZGUiOiIyOTM2NTE5NjciLCJ0b2tlbiI6IkdwcnBHM0lZRS9MQi9PRHhEd1RRNVAxWVhiakU2ODFqVFBEZFcyV0ZkclpvZ250MXpQSWpGcy9xUjBrK2lpeE0iLCJ1aW4iOiIzODA3NjE3NzAzIn0%3D&data=sE7yj0bt5HONB-kmWNAgcNcXuqV6GoW405v3Dudf4l34k2pHsycjbleXJVNAzcwXirFAQb05WZ1pEt01f90GEw&svctype=4&tempid=h5_group_info" target="_blank" class="social-link" data-lang="qqGroup">
-                    <i class="fas fa-comments"></i> QQ交流群
-                </a>
-            </div>
-            <!-- GitLab声明 -->
-            <div class="gitlab-tip" data-lang="gitlabTip">
-                <i class="fas fa-info-circle"></i> 项目已迁移至极狐GitLab维护，新功能与BUG修复持续开发中，敬请期待！本版本为正版盗版通用版，无需区分版本下载
-            </div>
-            <!-- 趣味知识点 -->
-            <div class="tld-facts">
-                <ul class="facts-list">
-                    <li class="facts-item" data-lang="fact1">长途旅行车间工具由4人共创，中文版本仅1人独立维护</li>
-                    <li class="facts-item" data-lang="fact2">本汉化版累计修复超20个原版工具的中英文适配BUG</li>
-                    <li class="facts-item" data-lang="fact3">工具支持自定义模组加载顺序，解决90%的模组冲突问题</li>
-                    <li class="facts-item" data-lang="fact4">汉化版平均每7天更新一次，紧跟原版功能迭代节奏</li>
-                    <li class="facts-item" data-lang="fact5">超5000名玩家使用本汉化版进行长途旅行模组游玩</li>
-                    <li class="facts-item" data-lang="fact6">核心加载引擎基于C#开发，适配Windows全版本系统</li>
-                </ul>
-            </div>
-            <!-- 版权 -->
-            <div class="copyright" data-lang="copyright">© 2026 长途旅行中文车间工具 版权所有 | 仅供学习研究使用</div>
+        <div class="block-actions-wrapper">
+          <div class="icon">
+            <svg viewBox="0 0 25 25"><g fill="none" fill-rule="evenodd"><path stroke="currentColor" stroke-width="2" d="M1 1h23v23H1z"></path><path d="M9.667 12.727L4 20h17l-4.25-5.818-2.876 3.942-4.207-5.397zm9.916-5.545c0-1.207-.949-2.182-2.125-2.182-1.175 0-2.125.975-2.125 2.182 0 1.207.95 2.182 2.125 2.182 1.176 0 2.125-.975 2.125-2.182z" fill="currentColor" fill-rule="nonzero"></path></g></svg>
+          </div>
+          <div class="icon margin-right">
+            <svg viewBox="0 0 25 25"><path d="M12.25 0c1.375 0 2.5 1.125 2.5 2.5S13.625 5 12.25 5a2.507 2.507 0 01-2.5-2.5c0-1.375 1.125-2.5 2.5-2.5zM23.5 8.75H16V25h-2.5v-7.5H11V25H8.5V8.75H1v-2.5h22.5v2.5z" fill="currentColor"></path></svg>
+          </div>
         </div>
+      </div>
     </div>
 
-    <script>
-        // 1. 多语言配置对象（简/繁/英/西/法/粤）
-        const langData = {
-            'zh-cn': {
-                title: '长途旅行中文车间工具',
-                downloadTitle: '版本下载（最新v8.6.3 · 正版盗版通用）',
-                versionType: '版本类型',
-                versionNum: '版本号',
-                operation: '操作',
-                generalVersion: '通用版',
-                downloadBtn: '立即下载',
-                bilibili: 'B站教程',
-                qqGroup: 'QQ交流群',
-                gitlabTip: '项目已迁移至极狐GitLab维护，新功能与BUG修复持续开发中，敬请期待！本版本为正版盗版通用版，无需区分版本下载',
-                fact1: '长途旅行车间工具由4人共创，中文版本仅1人独立维护',
-                fact2: '本汉化版累计修复超20个原版工具的中英文适配BUG',
-                fact3: '工具支持自定义模组加载顺序，解决90%的模组冲突问题',
-                fact4: '汉化版平均每7天更新一次，紧跟原版功能迭代节奏',
-                fact5: '超5000名玩家使用本汉化版进行长途旅行模组游玩',
-                fact6: '核心加载引擎基于C#开发，适配Windows全版本系统',
-                copyright: '© 2026 长途旅行中文车间工具 版权所有 | 仅供学习研究使用'
-            },
-            'zh-tw': {
-                title: '長途旅行中文車間工具',
-                downloadTitle: '版本下載（最新v8.6.3 · 正版盜版通用）',
-                versionType: '版本類型',
-                versionNum: '版本號',
-                operation: '操作',
-                generalVersion: '通用版',
-                downloadBtn: '立即下載',
-                bilibili: 'B站教學',
-                qqGroup: 'QQ交流群',
-                gitlabTip: '專案已遷移至極狐GitLab維護，新功能與BUG修復持續開發中，敬請期待！本版本為正版盜版通用版，無需區分版本下載',
-                fact1: '長途旅行車間工具由4人共創，中文版本僅1人獨立維護',
-                fact2: '本漢化版累計修復超20個原版工具的中英文適配BUG',
-                fact3: '工具支援自定義模組加載順序，解決90%的模組衝突問題',
-                fact4: '漢化版平均每7天更新一次，緊跟原版功能迭代節奏',
-                fact5: '超5000名玩家使用本漢化版進行長途旅行模組遊玩',
-                fact6: '核心加載引擎基於C#開發，適配Windows全版本系統',
-                copyright: '© 2026 長途旅行中文車間工具 版權所有 | 僅供學習研究使用'
-            },
-            'en': {
-                title: 'The Long Drive Chinese Workshop Tool',
-                downloadTitle: 'Version Download (Latest v8.6.3 · For All Versions)',
-                versionType: 'Version Type',
-                versionNum: 'Version No.',
-                operation: 'Action',
-                generalVersion: 'Universal Version',
-                downloadBtn: 'Download Now',
-                bilibili: 'Bilibili Tutorial',
-                qqGroup: 'QQ Discussion Group',
-                gitlabTip: 'The project has been migrated to GitLab for maintenance. New features and bug fixes are in continuous development! This version is universal for all game versions, no need to distinguish.',
-                fact1: 'The Long Drive Workshop Tool was co-created by 4 people, while the Chinese version is maintained by only 1 person independently.',
-                fact2: 'This Chinese version has fixed more than 20 Chinese-English adaptation bugs of the original tool.',
-                fact3: 'The tool supports custom mod loading order, solving 90% of mod conflict problems.',
-                fact4: 'The Chinese version is updated every 7 days on average, keeping up with the original function iteration.',
-                fact5: 'More than 5000 players use this Chinese version for The Long Drive mod gameplay.',
-                fact6: 'The core loading engine is developed based on C#, compatible with all Windows systems.',
-                copyright: '© 2026 The Long Drive Chinese Workshop Tool. All rights reserved | For study and research only.'
-            },
-            'es': {
-                title: 'Herramienta de Taller Chino de The Long Drive',
-                downloadTitle: 'Descarga de Versión (Última v8.6.3 · Para Todas las Versiones)',
-                versionType: 'Tipo de Versión',
-                versionNum: 'Número de Versión',
-                operation: 'Acción',
-                generalVersion: 'Versión Universal',
-                downloadBtn: 'Descargar Ahora',
-                bilibili: 'Tutorial de Bilibili',
-                qqGroup: 'Grupo de Discusión QQ',
-                gitlabTip: 'El proyecto se ha migrado a GitLab para mantenimiento. ¡Nuevas funciones y correcciones de errores están en desarrollo continuo! Esta versión es universal para todas las versiones del juego, sin necesidad de distinguir.',
-                fact1: 'La Herramienta de Taller de The Long Drive fue creada conjuntamente por 4 personas, mientras que la versión china es mantenida por solo 1 persona de forma independiente.',
-                fact2: 'Esta versión china ha arreglado más de 20 errores de adaptación chino-inglés de la herramienta original.',
-                fact3: 'La herramienta admite el orden de carga de mods personalizado, resolviendo el 90% de los problemas de conflicto de mods.',
-                fact4: 'La versión china se actualiza cada 7 días en promedio, al día con la iteración de funciones original.',
-                fact5: 'Más de 5000 jugadores usan esta versión china para el juego con mods de The Long Drive.',
-                fact6: 'El motor de carga core está desarrollado basado en C#, compatible con todos los sistemas Windows.',
-                copyright: '© 2026 Herramienta de Taller Chino de The Long Drive. Todos los derechos reservados | Solo para estudio e investigación.'
-            },
-            'fr': {
-                title: 'Outil d\'Atelier Chinois de The Long Drive',
-                downloadTitle: 'Téléchargement de Version (Dernière v8.6.3 · Pour Toutes les Versions)',
-                versionType: 'Type de Version',
-                versionNum: 'Numéro de Version',
-                operation: 'Action',
-                generalVersion: 'Version Universelle',
-                downloadBtn: 'Télécharger Maintenant',
-                bilibili: 'Tutoriel Bilibili',
-                qqGroup: 'Groupe de Discussion QQ',
-                gitlabTip: 'Le projet a été migré vers GitLab pour maintenance. De nouvelles fonctionnalités et corrections de bugs sont en développement continu ! Cette version est universelle pour toutes les versions du jeu, pas besoin de distinguer.',
-                fact1: 'L\'Outil d\'Atelier de The Long Drive a été créé conjointement par 4 personnes, tandis que la version chinoise est maintenue par une seule personne indépendamment.',
-                fact2: 'Cette version chinoise a corrigé plus de 20 bugs d\'adaptation chinois-anglais de l\'outil original.',
-                fact3: 'L\'outil prend en charge l\'ordre de chargement des mods personnalisé, résolvant 90% des problèmes de conflit de mods.',
-                fact4: 'La version chinoise est mise à jour toutes les 7 jours en moyenne, suivant l\'itération des fonctions originales.',
-                fact5: 'Plus de 5000 joueurs utilisent cette version chinoise pour le jeu avec mods de The Long Drive.',
-                fact6: 'Le moteur de chargement core est développé sur la base de C#, compatible avec tous les systèmes Windows.',
-                copyright: '© 2026 Outil d\'Atelier Chinois de The Long Drive. Tous droits réservés | Uniquement pour étude et recherche.'
-            },
-            'yue': {
-                title: '長途旅行中文車間工具（粵語版）',
-                downloadTitle: '版本下載（最新v8.6.3 · 正版盜版都用到）',
-                versionType: '版本類型',
-                versionNum: '版本號',
-                operation: '操作',
-                generalVersion: '通用版',
-                downloadBtn: '即刻下載',
-                bilibili: 'B站教學片',
-                qqGroup: 'QQ吹水群',
-                gitlabTip: '項目已經搬咗去極狐GitLab維護，新功能同BUG修復不斷開發中，敬請期待！呢個版本正版盜版都用到，唔使分版本下載',
-                fact1: '長途旅行車間工具由4個人一齊搞，中文版本淨係得1個人獨立維護',
-                fact2: '呢個漢化版累計修復咗超過20個原版工具嘅中英文適配BUG',
-                fact3: '工具支援自定義模組加載順序，解決到90%嘅模組衝突問題',
-                fact4: '漢化版平均每7日更新一次，緊跟原版功能更新節奏',
-                fact5: '超過5000個玩家用呢個漢化版玩長途旅行模組',
-                fact6: '核心加載引擎基於C#開發，適配所有Windows系統',
-                copyright: '© 2026 長途旅行中文車間工具 版權所有 | 淨供學習研究使用'
-            }
-        };
+    <div class="static-cube">
+      <div class="block-wrapper">
+        <div class="static-block">
+          <div class="cube-top">
+            <div class="cube-top-svg">
+              <svg viewBox="0 0 1400 218"><path d="M140 0h1120l140 218H0z" fill="none" stroke="currentColor"></path></svg>
+            </div>
+          </div>
+          <div class="block-content">
+            <div class="block-title-wrapper">
+              <div class="block-year"><h4 class="block-title" data-i18n="release_version">发布版本</h4></div>
+              <div class="block-client"></div>
+              <div class="block-studio"><h4 class="block-title muted" data-i18n="os">操作系统</h4></div>
+              <div class="block-type"><h4 class="block-title muted" data-i18n="version">版本</h4></div>
+            </div>
+            <div class="block-actions-wrapper">
+              <div class="icon muted">
+                <svg viewBox="0 0 25 25"><g fill="none" fill-rule="evenodd" stroke="currentColor" stroke-width="2"><circle cx="9" cy="9" r="8"></circle><path stroke-linecap="square" d="M15 15l8 8"></path></g></svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-        // 2. 语言切换面板展开/隐藏逻辑
-        const langToggleBtn = document.getElementById('langToggleBtn');
-        const langSwitchPanel = document.getElementById('langSwitchPanel');
-        const langBtns = document.querySelectorAll('.lang-btn');
-        const langElements = document.querySelectorAll('[data-lang]');
+      <div class="block-wrapper">
+        <div class="static-block">
+          <a href="https://gitlab.com/MFSDev-NET/tldweb/-/raw/main/长途车间汉化版__1_.exe" class="hoverable block-content">
+            <div class="block-title-wrapper">
+              <div class="block-year"><h4 class="block-title">04-16</h4></div>
+              <div class="block-client"><h4 class="block-title" data-i18n="download">下载</h4></div>
+              <div class="block-studio"><h4 class="block-title" data-i18n="windows">Windows</h4></div>
+              <div class="block-type"><h4 class="block-title">8.6.3 C#</h4></div>
+            </div>
+            <div class="block-actions-wrapper">
+              <div class="icon">
+                <svg viewBox="0 0 25 25"><path d="M0 13.486h21.178l-9.602 9.591 1.413 1.412L23.591 13.9l.001.001L25 12.496l-.002-.002H25l-1.413-1.412h-.002L12.989.5l-1.407 1.406 9.596 9.584H0v1.996z" fill="currentColor" fill-rule="evenodd"></path></svg>
+              </div>
+            </div>
+          </a>
+        </div>
+      </div>
 
-        // 点击图标展开/隐藏面板
-        langToggleBtn.addEventListener('click', () => {
-            langSwitchPanel.classList.toggle('show');
-        });
+      <div class="block-wrapper">
+        <div class="static-block">
+          <a href="" class="hoverable block-content">
+            <div class="block-title-wrapper">
+              <div class="block-year"><h4 class="block-title">06-23</h4></div>
+              <div class="block-client"><h4 class="block-title" data-i18n="download">下载</h4></div>
+              <div class="block-studio"><h4 class="block-title" data-i18n="linux_no">Linux (暂无)</h4></div>
+              <div class="block-type"><h4 class="block-title">Linux</h4></div>
+            </div>
+            <div class="block-actions-wrapper">
+              <div class="icon">
+                <svg viewBox="0 0 25 25"><path d="M0 13.486h21.178l-9.602 9.591 1.413 1.412L23.591 13.9l.001.001L25 12.496l-.002-.002H25l-1.413-1.412h-.002L12.989.5l-1.407 1.406 9.596 9.584H0v1.996z" fill="currentColor" fill-rule="evenodd"></path></svg>
+              </div>
+            </div>
+          </a>
+        </div>
+      </div>
 
-        // 点击页面其他区域关闭面板
-        document.addEventListener('click', (e) => {
-            if (!langToggleBtn.contains(e.target) && !langSwitchPanel.contains(e.target)) {
-                langSwitchPanel.classList.remove('show');
-            }
-        });
+      <div class="block-wrapper">
+        <div class="static-block">
+          <a href="https://gitlab.com/MFSDev-NET/tldweb/-/raw/main/长途旅行模组加载器V1.2.exe" class="hoverable block-content">
+            <div class="block-title-wrapper">
+              <div class="block-year"><h4 class="block-title">04-20</h4></div>
+              <div class="block-client"><h4 class="block-title" data-i18n="download">下载</h4></div>
+              <div class="block-studio"><h4 class="block-title" data-i18n="windows">Windows</h4></div>
+              <div class="block-type"><h4 class="block-title" data-i18n="mod_loader">模组加载器 V1.4</h4></div>
+            </div>
+            <div class="block-actions-wrapper">
+              <div class="icon">
+                <svg viewBox="0 0 25 25"><path d="M0 13.486h21.178l-9.602 9.591 1.413 1.412L23.591 13.9l.001.001L25 12.496l-.002-.002H25l-1.413-1.412h-.002L12.989.5l-1.407 1.406 9.596 9.584H0v1.996z" fill="currentColor" fill-rule="evenodd"></path></svg>
+              </div>
+            </div>
+          </a>
+        </div>
+      </div>
 
-        // 语言切换逻辑
-        langBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                // 移除所有激活状态
-                langBtns.forEach(b => b.classList.remove('active'));
-                // 添加当前激活状态
-                btn.classList.add('active');
-                // 获取当前语言编码
-                const langCode = btn.dataset.langCode;
-                // 替换页面文本
-                if (langData[langCode]) {
-                    langElements.forEach(el => {
-                        const key = el.dataset.lang;
-                        if (langData[langCode][key]) {
-                            el.textContent = langData[langCode][key];
-                        }
-                    });
-                    // 修改页面lang属性
-                    document.documentElement.lang = langCode;
-                }
-                // 移动端自动关闭面板（提升体验）
-                if (window.innerWidth <= 768) {
-                    langSwitchPanel.classList.remove('show');
-                }
-            });
-        });
+      <div class="block-wrapper">
+        <div class="static-block">
+          <div class="block-content" style="display:flex;gap:20px;justify-content:center;padding-top:10px;padding-bottom:10px;">
+            <a href="https://qun.qq.com/universal-share/share?ac=1&authKey=xpre2wFg9f6629GkmS33x%2BYmo8D78dCw3LmNC2CFo6gJnJ%2BT4CpQCDtFzEu6wHiZ&busi_data=eyJncm91cENvZGUiOiIyOTM2NTE5NjciLCJ0b2tlbiI6IlBRVDUvZVBvOUhnaGo0c2s5TVBsNnhEb1lXQSt1ME9reUMrNTdMWnNQOCtrMXV5UzBvTXppanJCMlRDQS9LbVgiLCJ1aW4iOiIzODA3NjE3NzAzIn0%3D&data=sVGNsypgWij1rDYR4bxS3ztaIolMvG38IUyYyRDrvhP7R90xe64INwT1hdR85dmGkSFia0DrTn6pbTE_lp6OHA&svctype=4&tempid=h5_group_info" target="_blank" style="color:currentColor;text-decoration:none;">
+              <h4 class="block-title" data-i18n="qq_group">QQ交流群</h4>
+            </a>
+            <a href="https://b23.tv/1kJii6d" target="_blank" style="color:currentColor;text-decoration:none;">
+              <h4 class="block-title" data-i18n="bilibili">B站主页</h4>
+            </a>
+          </div>
+        </div>
+      </div>
 
-        // 3. 轻量化粒子背景
-        function createParticles() {
-            const container = document.getElementById('particleBg');
-            const count = 80;
-            const colors = ['#0091FF', '#0077E6', '#1a1a2e'];
-            for (let i = 0; i < count; i++) {
-                const particle = document.createElement('div');
-                const size = Math.random() * 3 + 1;
-                const color = colors[Math.floor(Math.random() * colors.length)];
-                const left = Math.random() * 100;
-                const duration = Math.random() * 30 + 20;
-                const delay = Math.random() * 20;
-                particle.style.cssText = `
-                    position: absolute;
-                    top: -5px;
-                    left: ${left}%;
-                    width: ${size}px;
-                    height: ${size}px;
-                    background: ${color};
-                    border-radius: 50%;
-                    opacity: ${Math.random() * 0.5 + 0.2};
-                    pointer-events: none;
-                    animation: particleFall ${duration}s linear infinite ${delay}s;
-                `;
-                container.appendChild(particle);
-            }
-        }
+      <div class="block-wrapper">
+        <div class="static-block">
+          <div class="dynamic-text" id="textBox"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
 
-        // 4. 粒子下落动画
-        document.head.insertAdjacentHTML('beforeend', `
-            <style>
-                @keyframes particleFall {
-                    0% { transform: translateY(0) translateX(0) rotate(0deg); }
-                    100% { transform: translateY(100vh) translateX(${Math.random() * 40 - 20}px) rotate(360deg); }
-                }
-            </style>
-        `);
+<div class="visit-counter" id="visit">访问：--</div>
+<button class="footer-btn signature-btn" data-i18n="signature">开发者签名</button>
 
-        // 5. 动态北京时间时钟
-        function updateTime() {
-            const now = new Date();
-            const pad = n => n.toString().padStart(2, '0');
-            const timeStr = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
-            document.getElementById('bjTime').innerText = timeStr;
-        }
-        setInterval(updateTime, 1000);
-        updateTime();
+<div class="modal-overlay" id="agreementModal">
+  <div class="modal-box">
+    <div class="modal-close">×</div>
+    <div class="modal-title" data-i18n="agreement">免责条款 / 协议</div>
+    <div class="agreement-text" id="agreementContent"></div>
+  </div>
+</div>
 
-        // 6. 页面加载初始化
-        window.addEventListener('load', () => {
-            createParticles();
-            // 页面淡入效果
-            document.body.style.opacity = '0';
-            document.body.style.transition = 'opacity 0.5s ease';
-            setTimeout(() => {
-                document.body.style.opacity = '1';
-            }, 100);
-        });
-    </script>
+<div class="modal-overlay" id="modal">
+  <div class="modal-box">
+    <div class="modal-close">×</div>
+    <div class="modal-title" data-i18n="modal_title">开发者留言</div>
+    <div class="modal-desc" data-i18n="modal_slogan">玩家至上 · 模组至上 · 为爱发电</div>
+    <div class="modal-text" id="modalText"></div>
+  </div>
+</div>
+
+<script>
+const i18n = {
+  zh: {
+    title: "TLDWorkshop 下载",
+    site_title: "TLDWorkshop 官方社区下载站!",
+    release_version: "版本", os: "操作系统", version: "版本", download: "下载",
+    windows: "Windows", linux_no: "Linux (暂无)", mod_loader: "模组加载器 V1.4",
+    qq_group: "QQ交流群", bilibili: "B站主页", signature: "开发者签名",
+    modal_title: "开发者留言", modal_slogan: "玩家至上 · 模组至上 · 为爱发电",
+    visit: "访问量", agreement: "免责条款",
+    agreement_content: `一、网站性质声明
+本网站（TLDWorkshop）为第三方非官方社区站点，由社区爱好者独立运营，仅提供游戏相关工具、汉化补丁、模组加载器的分享与下载服务。本站获得官方默许与第三方支持，并非游戏官方网站，与官方开发团队无直接隶属关系。
+二、版权归属声明
+1. 游戏本体、商标、LOGO、美术资源、程序代码等所有知识产权与合法权利，全部归属于游戏官方版权方所有。
+2. 本站提供的汉化补丁、模组加载器、修改工具等，均为基于官方游戏程序的二次适配与优化，未对原版核心代码进行逆向破解、恶意篡改或侵权使用。
+三、使用范围与适配说明
+1. 本站提供的内容主要针对中文地区与俄区玩家进行语言适配、功能优化与体验增强。
+2. 所有工具仅用于个人学习、研究与娱乐，禁止用于商业用途、非法传播、盈利行为或任何违反用户协议的活动。
+四、责任与免责声明
+1. 使用者自愿下载、安装与使用本站提供的所有文件，风险自行承担。
+2. 本站运营者不承担因使用工具导致的游戏崩溃、系统异常、账号风险、数据丢失等任何直接或间接责任。
+3. 若官方版权方要求下架、整改或停止服务，本站将无条件配合并立即执行。
+4. 本站坚持免费、纯净、无捆绑、无广告、无收费，所有内容仅供玩家交流使用。
+五、最终解释权
+本协议最终解释权归本站运营者所有，保留随时更新、修改条款的权利。使用者继续访问与使用本站，即视为已阅读、理解并完全同意本免责协议全部内容。`,
+    texts: [
+      "你可以不玩 但不能不下","游戏开发商制作游戏十分精彩","感谢模组加载器与模组的支持",
+      "感谢国内开发者制作的加载器","免费工具 永久无广告","安全无毒 放心使用",
+      "持续更新 稳定兼容","模组让游戏体验更丰富","热爱可抵岁月漫长",
+      "社区因你而温暖","技术无界 快乐共享","用心创作 用爱发电",
+      "长途旅行 一路相伴","开源共享 自由使用","拒绝收费 支持正版",
+      "感谢所有开发者与玩家","简单易用 一键加载","稳定流畅 适配全版本",
+      "创意无限 玩法自定义","全球玩家 共同交流","纯净工具 无捆绑插件",
+      "热爱游戏 热爱创作","陪伴每一位长途旅行者","开放社区 自由分享","用心服务 玩家至上"
+    ],
+    devMsg: [
+      "感谢每一位玩家的支持与陪伴","模组因热爱而存在，社区因你而精彩",
+      "坚持免费、纯净、安全的工具理念","用心打磨每一次更新与优化",
+      "玩家的需求永远是我们前进的方向","保持初心，为爱发电永不停歇",
+      "打造最稳定、最好用的长途旅行模组工具","尊重原创，支持正版，共同维护良好环境",
+      "愿每一位旅行者都能拥有最棒的游戏体验","未来可期，我们一路同行"
+    ]
+  },
+  en: {
+    title: "TLDWorkshop Download", site_title: "TLDWorkshop Official Download",
+    release_version: "Release", os: "OS", version: "Version", download: "Download",
+    windows: "Windows", linux_no: "Linux (Unavailable)", mod_loader: "Mod Loader V1.4",
+    qq_group: "QQ Group", bilibili: "Bilibili", signature: "Dev Signature",
+    modal_title: "Developer Message", modal_slogan: "Players First · Mods First · Power By Love",
+    visit: "Visits", agreement: "Agreement",
+    agreement_content: `1. Website Status
+This site (TLDWorkshop) We provide game tools, localization patches, and mod loaders for download. This site is supported and tolerated by the official team.
+2. Copyright Ownership
+All intellectual property rights including the game, trademarks, logos, art, and code belong exclusively to the official copyright holder.
+All patches, loaders, and tools on this site are modified and adapted based on official files, without reverse engineering, cracking, or infringement.
+3. Region & Usage
+Tools are mainly adapted for Chinese and Russian players.
+All content is for personal non‑commercial use only. Do not use for business, piracy, or violations of official EULA.
+4. Disclaimer
+You use all files at your own risk.
+We are not responsible for crashes, bans, data loss, or system issues caused by these tools.
+We will comply immediately if the official team requests removal or changes.
+This site is free, clean, no ads, no bundles, no payments.
+5. Final Rights
+We reserve the right to update this agreement. Continued use means you accept all terms.`,
+    texts: [
+      "You may not play, but can't miss it","Devs made the game amazing","Thanks to mod loader & modders",
+      "Thanks to Chinese devs for loader","Free tool, no ads forever","Safe & non-toxic",
+      "Keep updating, stable","Mods enrich the game","Love is always here",
+      "Community is warm","Tech without borders","Create with heart",
+      "Long drive with you","Open & share freely","No pay, support original",
+      "Thanks all devs & players","Easy to use, one click","Stable & smooth for all versions",
+      "Infinite creativity, custom gameplay","Global players, communicate together",
+      "Clean tool, no bundle plugins","Love game, love creation","With every traveler",
+      "Open community, share freely","Serve with heart, players first"
+    ],
+    devMsg: [
+      "Thanks for every player's support and company","Mods exist for love, community shines with you",
+      "Stick to free, clean, safe tools","Polish every update with care",
+      "Players' needs guide our way","Keep original intention, power by love forever",
+      "Build the most stable & useful mod tool","Respect original, support official, together better",
+      "Wish every traveler great experience","Future is bright, we go all the way"
+    ]
+  },
+  ru: {
+    title: "TLDWorkshop Загрузка", site_title: "TLDWorkshop Официальный сайт",
+    release_version: "Версия", os: "ОС", version: "Версия", download: "Скачать",
+    windows: "Windows", linux_no: "Linux (Недоступно)", mod_loader: "Загрузчик модов V1.4",
+    qq_group: "QQ Группа", bilibili: "Bilibili", signature: "Подпись",
+    modal_title: "Сообщение разработчика", modal_slogan: "Игроки важны · Моды важны · С любовью",
+    visit: "Посещения", agreement: "Соглашение",
+    agreement_content: `1. О сайте
+Этот сайт (TLDWorkshop) — неофициальная сообщественная платформа. Мы делаем инструменты, русификаторы и загрузчики модов. Сайт поддерживается и допущен официальной командой, не является официальным сайтом.
+2. Авторские права
+Все права на игру, торговые марки, код и контент принадлежат официальному правообладателю.
+Все файлы на сайте — это доработка на основе официальных данных, без взлома или нарушения прав.
+3. Использование
+Инструменты адаптированы для китайских и русских игроков.
+Контент только для личного использования, без коммерции.
+4. Отказ от ответственности
+Вы используете файлы на свой страх и риск.
+Мы не отвечаем за сбои, блокировку аккаунтов или потерю данных.
+Мы сразу удалим контент по требованию официальных разработчиков.
+Сайт бесплатный, без рекламы и встроенного софта.
+5. Права
+Мы оставляем за собой право изменить соглашение. Продолжая пользоваться сайтом, вы принимаете условия.`,
+    texts: [
+      "Можно не играть, но нельзя не скачать","Разработчики сделали игру прекрасной","Спасибо загрузчику и моддерам",
+      "Спасибо китайским разработчикам","Бесплатно, без рекламы","Безопасно и чисто",
+      "Постоянно обновляется","Моды улучшают игру","Любовь всегда с нами",
+      "Сообщество теплое","Техника без границ","Творю с душой",
+      "Дальняя дорога с тобой","Свободно делитесь","Без платно, поддерживайте оригинал",
+      "Спасибо всем разработчикам","Простой в использовании, один клик","Стабильно для всех версий",
+      "Безграничное творчество, своя игра","Глобальные игроки вместе","Чистый инструмент, без мусора",
+      "Люблю игру, люблю творчество","С каждым путешественником","Открытое сообщество, делитесь",
+      "Сердцем служим, игроки важны"
+    ],
+    devMsg: [
+      "Спасибо за поддержку каждого игрока","Моды существуют благодаря любви",
+      "Бесплатно, чисто, безопасно","Каждая версия сделана с заботой",
+      "Игроки — наш главный приоритет","Остаемся верными идеалам",
+      "Лучший инструмент для модов","Уважаем оригинал, поддерживаем официальную игру",
+      "Желаем вам отличного путешествия","Вместе мы сделаем сообщество лучше"
+    ]
+  }
+};
+
+let currentLang = 'zh';
+const textBox = document.getElementById('textBox');
+const modal = document.getElementById('modal');
+const modalText = document.getElementById('modalText');
+const visitEl = document.getElementById('visit');
+const agreementModal = document.getElementById('agreementModal');
+const agreementContent = document.getElementById('agreementContent');
+const themeToggle = document.getElementById('themeToggle');
+let isLightMode = false;
+let textIndex = 0, textTimer;
+
+themeToggle.addEventListener('click', () => {
+  isLightMode = !isLightMode;
+  document.body.classList.toggle('light-mode', isLightMode);
+  if (isLightMode) {
+    themeToggle.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>`;
+  } else {
+    themeToggle.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>`;
+  }
+});
+
+function renderLang() {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const k = el.dataset.i18n;
+    if (i18n[currentLang][k]) el.textContent = i18n[currentLang][k];
+  });
+  document.title = i18n[currentLang].title;
+  restartText();
+  renderDevMsg();
+  agreementContent.textContent = i18n[currentLang].agreement_content;
+}
+function restartText() {
+  clearInterval(textTimer);
+  textIndex = 0;
+  updateText();
+  textTimer = setInterval(updateText, 3000);
+}
+function updateText() {
+  const arr = i18n[currentLang].texts;
+  textBox.textContent = arr[textIndex % arr.length];
+  textIndex++;
+}
+function addVisit() {
+  let cnt = localStorage.getItem('visit') || 0;
+  cnt++;
+  localStorage.setItem('visit', cnt);
+  visitEl.textContent = `${i18n[currentLang].visit}：${cnt}`;
+}
+function renderDevMsg() {
+  modalText.innerHTML = '';
+  i18n[currentLang].devMsg.forEach((t, i) => {
+    const div = document.createElement('div');
+    div.style.marginBottom = '6px';
+    div.textContent = (i+1) + '. ' + t;
+    modalText.appendChild(div);
+  });
+}
+
+function openModal(modalEl) {
+  modalEl.style.display = 'flex';
+  setTimeout(() => modalEl.classList.add('show'), 10);
+}
+function closeModal(modalEl) {
+  modalEl.classList.remove('show');
+  setTimeout(() => modalEl.style.display = 'none', 300);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  renderLang();
+  addVisit();
+
+  document.querySelectorAll('.lang-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentLang = btn.dataset.lang;
+      renderLang();
+      visitEl.textContent = `${i18n[currentLang].visit}：${localStorage.getItem('visit')||0}`;
+    });
+  });
+
+  document.querySelector('.signature-btn').onclick = () => openModal(modal);
+  document.querySelector('.agreement-btn').onclick = () => openModal(agreementModal);
+  document.querySelectorAll('.modal-close').forEach(btn => {
+    btn.onclick = () => { closeModal(modal); closeModal(agreementModal); };
+  });
+  modal.onclick = (e) => e.target === modal && closeModal(modal);
+  agreementModal.onclick = (e) => e.target === agreementModal && closeModal(agreementModal);
+
+  const floatTrigger = document.getElementById('float-trigger');
+  const floatingBlock = document.querySelector('.floating-block');
+  floatTrigger.addEventListener('mouseenter', function() {
+    floatingBlock.classList.add('up');
+    floatingBlock.classList.remove('down');
+  });
+  floatTrigger.addEventListener('mouseleave', function(e) {
+    const isInside = e.relatedTarget && e.relatedTarget.closest('.cube-wrapper');
+    if (isInside) return;
+    floatingBlock.classList.add('down');
+    floatingBlock.classList.remove('up');
+  });
+});
+</script>
 </body>
 </html>
