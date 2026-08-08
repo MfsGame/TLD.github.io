@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -305,7 +306,181 @@ body {
 .block-type{flex:1}
 @media(max-width:768px){.block-studio{display:none}}
 @media(max-width:480px){.block-type{display:none;}.os-tag{display:none}}
-  </style>
+  
+/* ===== Material 3 风格重构（仅视觉层，不修改功能） ===== */
+:root {
+  --c: #8ab4f8;
+  --c-light: rgba(138,180,248,.14);
+  --c-alpha: rgba(138,180,248,.20);
+  --bg: #fdfbff;
+  --card: #f3edf7;
+  --text: #1d1b20;
+  --subtext: #625b71;
+  --border: transparent;
+  --radius: 28px;
+  --transition: .28s cubic-bezier(.2,0,0,1);
+  --btn-hover: rgba(103,80,164,.12);
+  --btn-active: #6750a4;
+}
+[data-theme="dark"] {
+  --bg: #141218;
+  --card: #211f26;
+  --text: #e6e1e5;
+  --subtext: #cac4d0;
+  --c: #d0bcff;
+  --c-light: rgba(208,188,255,.12);
+  --border: transparent;
+  --btn-hover: rgba(208,188,255,.12);
+  --btn-active: #d0bcff;
+  --btn-active-text:#381e72;
+}
+body {
+  font-family: "Google Sans","Noto Sans SC","Microsoft YaHei",system-ui,sans-serif;
+  letter-spacing:.01em;
+}
+.main-wrapper {
+  padding: 96px 20px;
+}
+.card {
+  border:0;
+  border-radius:28px;
+  background:var(--card);
+  box-shadow:0 1px 3px rgba(0,0,0,.08);
+}
+.card:hover {
+  transform:translateY(-3px);
+  border-color:transparent;
+  box-shadow:0 8px 24px rgba(0,0,0,.12);
+}
+.block-content {
+  padding:20px 24px;
+}
+.block-title {
+  font-size:15px;
+  font-weight:600;
+}
+.btn,#toTop {
+  border:0;
+  background:var(--card);
+  border-radius:100px;
+  min-height:42px;
+  padding:10px 18px;
+  box-shadow:0 1px 2px rgba(0,0,0,.08);
+}
+.btn:hover,#toTop:hover {
+  background:var(--c-light);
+  border:0;
+  transform:translateY(-1px);
+}
+.btn.active {
+  background:var(--btn-active);
+  color:var(--btn-active-text);
+}
+.os-tag {
+  background:var(--btn-active);
+  color:var(--btn-active-text);
+  border-radius:100px;
+  padding:4px 12px;
+}
+.modal-box {
+  border-radius:32px;
+  box-shadow:0 24px 80px rgba(0,0,0,.25);
+}
+.toast {
+  border-radius:100px;
+}
+
+/* Android 16 / Material 3 Expressive Motion Layer */
+:root{
+  --motion-standard: cubic-bezier(.2,.0,0,1);
+  --motion-emphasized: cubic-bezier(.05,.7,.1,1);
+}
+
+body{
+  animation: androidPageEnter .55s var(--motion-emphasized) both;
+}
+
+@keyframes androidPageEnter{
+  from{opacity:0; transform:translateY(18px) scale(.985); filter:blur(8px)}
+  to{opacity:1; transform:none; filter:blur(0)}
+}
+
+.card{
+  transform-origin:center;
+  transition:
+    transform .45s var(--motion-emphasized),
+    box-shadow .45s var(--motion-emphasized),
+    border-color .35s ease,
+    background .35s ease;
+}
+
+.card:hover{
+  transform:translateY(-6px) scale(1.012);
+}
+
+.card:active{
+  transform:scale(.97);
+  transition:.12s cubic-bezier(.3,0,.8,.15);
+}
+
+.btn,.block-content,#toTop{
+  position:relative;
+  overflow:hidden;
+}
+
+.btn::after,.block-content::after,#toTop::after{
+  content:"";
+  position:absolute;
+  width:20px;
+  height:20px;
+  border-radius:50%;
+  background:currentColor;
+  opacity:0;
+  transform:scale(0);
+  pointer-events:none;
+}
+
+.btn:active::after,.block-content:active::after,#toTop:active::after{
+  animation:m3Ripple .55s var(--motion-standard);
+}
+
+@keyframes m3Ripple{
+  0%{opacity:.18;transform:scale(0)}
+  100%{opacity:0;transform:scale(16)}
+}
+
+.modal-overlay{
+  backdrop-filter:blur(18px) saturate(130%);
+}
+
+.modal-box{
+  animation:m3Dialog .4s var(--motion-emphasized) both;
+  box-shadow:0 24px 80px rgba(0,0,0,.22);
+}
+
+@keyframes m3Dialog{
+  from{opacity:0;transform:translateY(40px) scale(.92)}
+  to{opacity:1;transform:none}
+}
+
+.os-tag,.active{
+  transition:.35s var(--motion-emphasized);
+}
+
+.dynamic-text{
+  animation:m3TextFade .5s ease;
+}
+
+@keyframes m3TextFade{
+  from{opacity:0;transform:translateY(8px)}
+  to{opacity:1;transform:none}
+}
+
+@media(prefers-reduced-motion:reduce){
+ *{animation:none!important;transition:none!important}
+}
+
+</style>
 </head>
 <body>
 <div class="bar lang-bar">
@@ -758,6 +933,19 @@ document.addEventListener('DOMContentLoaded', () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 });
+
+
+
+// Material 3 ripple positioning
+(function(){
+ document.querySelectorAll('.btn,.block-content,#toTop').forEach(el=>{
+  el.addEventListener('pointerdown',e=>{
+   const r=el.getBoundingClientRect();
+   el.style.setProperty('--x',(e.clientX-r.left)+'px');
+   el.style.setProperty('--y',(e.clientY-r.top)+'px');
+  });
+ });
+})();
 </script>
 </body>
 </html>
