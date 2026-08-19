@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -479,6 +480,49 @@ body{
  *{animation:none!important;transition:none!important}
 }
 
+
+/* ===== Material 3 Settings Panel Extension ===== */
+.settings-panel{
+  position:fixed;
+  inset:0;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:100000;
+  background:rgba(0,0,0,.35);
+  backdrop-filter:blur(16px);
+}
+.settings-panel.show{display:flex}
+.settings-card{
+  width:min(92vw,520px);
+  background:var(--card);
+  color:var(--text);
+  border-radius:32px;
+  padding:24px;
+  box-shadow:0 24px 80px rgba(0,0,0,.25);
+  animation:m3Dialog .35s var(--motion-emphasized) both;
+}
+.settings-title{font-size:22px;font-weight:700;margin-bottom:20px}
+.setting-row{
+ display:flex;justify-content:space-between;align-items:center;
+ padding:14px 0;border-bottom:1px solid rgba(128,128,128,.12);
+}
+.setting-row input[type="color"]{width:48px;height:32px;border:0;background:none}
+.setting-row input[type="text"]{
+ background:var(--bg);color:var(--text);border:0;border-radius:16px;
+ padding:10px 14px;outline:none;
+}
+.m3-switch{
+ width:52px;height:32px;border-radius:50px;background:#79747e;
+ position:relative;cursor:pointer;
+}
+.m3-switch::after{
+ content:"";position:absolute;width:24px;height:24px;background:white;
+ border-radius:50%;top:4px;left:4px;transition:.25s;
+}
+.m3-switch.active{background:var(--btn-active)}
+.m3-switch.active::after{transform:translateX(20px)}
+
 </style>
 </head>
 <body>
@@ -939,5 +983,68 @@ document.addEventListener('DOMContentLoaded', () => {
  });
 })();
 </script>
+
+<div class="settings-panel" id="settingsPanel">
+  <div class="settings-card">
+    <div class="settings-title">设置</div>
+    <div class="setting-row">
+      <span>自定义主题色</span>
+      <input id="accentPicker" type="color" value="#6750a4">
+    </div>
+    <div class="setting-row">
+      <span>显示动态文字</span>
+      <div id="textSwitch" class="m3-switch active"></div>
+    </div>
+    <div class="setting-row">
+      <span>网站标题</span>
+      <input id="titleInput" type="text" placeholder="TLDWorkshop">
+    </div>
+    <button class="btn" id="closeSettings">完成</button>
+  </div>
+</div>
+
+
+<script>
+(function(){
+ const panel=document.getElementById("settingsPanel");
+ const btn=document.createElement("button");
+ btn.className="btn header-icon-btn";
+ btn.textContent="⚙";
+ document.querySelector(".header-icons").appendChild(btn);
+ const picker=document.getElementById("accentPicker");
+ const sw=document.getElementById("textSwitch");
+ const title=document.getElementById("titleInput");
+ const textBox=document.getElementById("textBox");
+
+ btn.onclick=()=>panel.classList.add("show");
+ document.getElementById("closeSettings").onclick=()=>panel.classList.remove("show");
+ panel.onclick=e=>{if(e.target===panel)panel.classList.remove("show")};
+
+ picker.value=localStorage.getItem("accent")||"#6750a4";
+ document.documentElement.style.setProperty("--btn-active",picker.value);
+ document.documentElement.style.setProperty("--c",picker.value);
+ picker.oninput=()=>{
+   localStorage.setItem("accent",picker.value);
+   document.documentElement.style.setProperty("--btn-active",picker.value);
+   document.documentElement.style.setProperty("--c",picker.value);
+ };
+
+ let showText=localStorage.getItem("showText")!=="false";
+ if(!showText) sw.classList.remove("active");
+ sw.onclick=()=>{
+   showText=!showText;
+   sw.classList.toggle("active",showText);
+   localStorage.setItem("showText",showText);
+   if(textBox) textBox.style.display=showText?"":"none";
+ };
+
+ title.value=localStorage.getItem("customTitle")||"";
+ title.onchange=()=>{
+   localStorage.setItem("customTitle",title.value);
+   if(title.value) document.title=title.value;
+ };
+})();
+</script>
+
 </body>
 </html>
